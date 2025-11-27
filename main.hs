@@ -5,8 +5,10 @@ data Pixel = RGB Float Float Float | RGBA Float Float Float Float
 ascii_symbols :: [Char]
 ascii_symbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
 
-rgb_to_symbol :: Pixel -> Maybe Char
-rgb_to_symbol (RGBA r g b a) = ascii_symbols !! index <$ guard (index >= 0 && index <= 9)
+rgb_to_symbol :: Pixel -> Either String Char
+rgb_to_symbol (RGBA r g b a) = if index >= 0 && index <= 9
+  then Right $ ascii_symbols !! index
+  else Left "Invalid RGBA values. Keep all between 0-1."
   where
     intensity = (r + g + b) / 3 * a
     index = round $ intensity * (fromIntegral (length ascii_symbols) - 1)
