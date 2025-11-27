@@ -1,1 +1,23 @@
+-- Cabal build artifacts
+/dist-newstyle/
+/cabal.project.local
+/cabal.project.local~
+
+
+-- Stack (if you ever use stack)
+/.stack-work/
+
+
+-- HLS (Haskell Language Server)
+.hie
+.hie-bios
+.hie-cache
+.hls/
+
+-- VSCode
+.vscode/
+
+-- Windows noise
+Thumbs.db
+
 *.yaml
