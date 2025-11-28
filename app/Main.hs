@@ -3,23 +3,26 @@
 module Main where
 
 import qualified Data.Vector.Storable as S
+import Control.Monad
 import Codec.Picture
 
-data Pixel = RGB Float Float Float | RGBA Float Float Float Float
+data Pixel = RGBA Float Float Float Float
   deriving (Show)
 
--- type ImageData = [Pixel]
+min3 :: Ord a => a -> a -> a -> a
+min3 a b = min (min a b)
 
--- ascii_symbols :: [Char]
--- ascii_symbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
+max3 :: Ord a => a -> a -> a -> a
+max3 a b = max (max a b)
 
--- rgb_to_symbol :: Pixel -> Either String Char
--- rgb_to_symbol (RGBA r g b a) = if index >= 0 && index <= 9
---   then Right $ ascii_symbols !! index
---   else Left "Invalid RGBA values. Keep all between 0-1."
---   where
---     intensity = (r + g + b) / 3 * a
---     index = round $ intensity * (fromIntegral (length ascii_symbols) - 1)
+ascii_symbols :: [Char]
+ascii_symbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
+
+to_ascii :: Main.Pixel -> Char
+to_ascii (RGBA r g b a) = ascii_symbols !! index
+  where
+    lightness = (min3 r g b + max3 r g b) / 2 * a
+    index = round (lightness * fromIntegral (length ascii_symbols - 1))
 
 get_width :: IO Int
 get_width =
@@ -27,15 +30,15 @@ get_width =
   getLine >>= \input ->
   pure $ if null input then 80 else (read input :: Int)
 
-get_image_data :: String -> IO (Either String (S.Vector (PixelBaseComponent PixelRGBA8)))
-get_image_data path = 
+get_image :: String -> IO (Either String (Image PixelRGBA8))
+get_image path = 
   readImage path >>= \result ->
   pure $ case result of
     Left err      -> Left err
-    Right dynImg  -> Right $ imageData (convertRGBA8 dynImg)
+    Right dynImg  -> Right $ convertRGBA8 dynImg
 
-convert_rec :: S.Vector (PixelBaseComponent PixelRGBA8) -> Int -> [Main.Pixel]
-convert_rec v i = RGBA r g b a : convert_rec v (i+4)
+convert_rec :: Int -> S.Vector (PixelBaseComponent PixelRGBA8) -> [Main.Pixel]
+convert_rec i v = RGBA r g b a : convert_rec (i+4) v
   where
     r = fromIntegral (v S.! i) / 255
     g = fromIntegral (v S.! (i+1)) / 255
@@ -43,8 +46,22 @@ convert_rec v i = RGBA r g b a : convert_rec v (i+4)
     a = fromIntegral (v S.! (i+3)) / 255
 
 convert :: S.Vector (PixelBaseComponent PixelRGBA8) -> [Main.Pixel]
-convert v = convert_rec v 0 
+convert = convert_rec 0
 
+generate :: [Main.Pixel] -> [Char]
+generate = map to_ascii
+
+print_ascii_rec :: Int -> Int -> [Char] -> IO ()
+print_ascii_rec _ _ [] = pure ()
+print_ascii_rec i w (c:cs) =
+  putChar c >>
+  when (i > 0 && (i+1) `mod` w == 0) (putChar '\n') >>
+  print_ascii_rec (i+1) w cs
+
+
+print_ascii :: Image PixelRGBA8 -> IO ()
+print_ascii img = print_ascii_rec 0 (imageWidth img) ascii
+  where ascii = generate . convert . imageData $ img
 
 main :: IO ()
 main =
@@ -52,6 +69,6 @@ main =
   print width >>
   putStrLn "Converting image to ASCII..." >>
   let imgPath = "C:/Users/kojom/Downloads/7c1b1215-a00a-4ef7-8331-e2dfab6f5af7.jpg" in
-  get_image_data imgPath >>= \case
-    Left err      -> putStrLn $ "Error: " ++ err
-    Right dynImg  -> print $ convert dynImg
+  get_image imgPath >>= \case
+    Left err  -> putStrLn $ "Error: " ++ err
+    Right img -> print_ascii img
