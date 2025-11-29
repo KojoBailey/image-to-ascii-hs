@@ -2,6 +2,7 @@
 
 module Main where
 
+import System.Environment
 import qualified Data.Vector.Storable as S
 import Control.Monad
 import qualified Codec.Picture as Juicy
@@ -130,10 +131,14 @@ get_image path =
 
 main :: IO ()
 main =
-  get_width >>= \max_width ->
-  print max_width >>
-  putStrLn "Converting image to ASCII..." >>
-  let imgPath = "C:/Users/kojom/Downloads/7c1b1215-a00a-4ef7-8331-e2dfab6f5af7.jpg" in
-  get_image imgPath >>= \case
-    Left err  -> putStrLn $ "Error: " ++ err
-    Right img -> print_ascii img max_width
+  getArgs >>= \case
+    [imgPath] ->
+      get_width >>= \max_width ->
+      print max_width >>
+      putStrLn "Converting image to ASCII..." >>
+      get_image imgPath >>= \case
+        Left err  -> putStrLn $ "Error: " ++ err
+        Right img -> print_ascii img max_width
+    _ ->
+      putStrLn "Error: No image input detected." >>
+      putStrLn "Drag an image onto the executable to get started!"
