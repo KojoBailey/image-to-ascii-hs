@@ -4,27 +4,28 @@ module Main where
 
 import System.Environment
 import qualified Data.Vector.Storable as S
+import Data.Word ( Word8 )
 import Control.Monad
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 
-data Pixel = RGBA Float Float Float Float
+data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
   deriving (Show)
 
 instance Storable Pixel where
-  sizeOf _ = 16
-  alignment _ = alignment (undefined :: Float)
+  sizeOf _ = 4
+  alignment _ = alignment (undefined :: Word8)
   peek ptr =
     peekByteOff ptr 0 >>= \r ->
-    peekByteOff ptr 4 >>= \g ->
-    peekByteOff ptr 8 >>= \b ->
-    peekByteOff ptr 12 >>= \a ->
+    peekByteOff ptr 1 >>= \g ->
+    peekByteOff ptr 2 >>= \b ->
+    peekByteOff ptr 3 >>= \a ->
     pure (RGBA r g b a)
   poke ptr (RGBA r g b a) =
     pokeByteOff ptr 0 r >>
-    pokeByteOff ptr 4 g >>
-    pokeByteOff ptr 8 b >>
-    pokeByteOff ptr 12 a 
+    pokeByteOff ptr 1 g >>
+    pokeByteOff ptr 2 b >>
+    pokeByteOff ptr 3 a 
 
 type Pixels = S.Vector Pixel
 
@@ -46,8 +47,11 @@ ascii_symbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
 to_ascii :: Pixel -> Char
 to_ascii (RGBA r g b a) = ascii_symbols !! index
   where
-    lightness = (min3 r g b + max3 r g b) / 2 * a
-    index = round (lightness * fromIntegral (length ascii_symbols - 1))
+    mn = fromIntegral $ min3 r g b :: Float
+    mx = fromIntegral $ max3 r g b :: Float
+    lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
+    index = round (lightness * fromIntegral maxIndex)
+    maxIndex = length ascii_symbols - 1
 
 clamp_x_rec :: Int -> Float -> Int -> Int -> Float -> Image -> Pixels
 clamp_x_rec column step new_width y_index step_size img
@@ -91,10 +95,10 @@ convert_rec i v
   | i >= S.length v = S.empty
   | otherwise           = RGBA r g b a `S.cons` convert_rec (i+4) v
   where
-    r = fromIntegral (v S.! i) / 255
-    g = fromIntegral (v S.! (i+1)) / 255
-    b = fromIntegral (v S.! (i+2)) / 255
-    a = fromIntegral (v S.! (i+3)) / 255
+    r = fromIntegral $ v S.! i
+    g = fromIntegral $ v S.! (i+1)
+    b = fromIntegral $ v S.! (i+2)
+    a = fromIntegral $ v S.! (i+3)
 
 convert :: Juicy.Image Juicy.PixelRGBA8 -> Image
 convert img = Image {
