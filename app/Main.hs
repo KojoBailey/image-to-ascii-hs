@@ -53,13 +53,12 @@ toAscii (RGBA r g b a) = asciiSymbols !! index
     maxIndex = length asciiSymbols - 1
 
 clamp :: Int -> Image -> Image
-clamp maxWidth image = Image {
+clamp newWidth image = Image {
     pixels = S.generate newSize clampStep,
     width = newWidth,
     height = newHeight }
   where
     newSize = newWidth * newHeight
-    newWidth = min maxWidth (width image)
     newHeight = round (fromIntegral (height image) / xStepSize / 2)
     xStepSize = fromIntegral (width image) / fromIntegral newWidth :: Float
     yStepSize = fromIntegral (height image) / fromIntegral newHeight :: Float
@@ -113,12 +112,13 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
   where
     size = S.length imageAscii
     imageAscii = S.map toAscii (pixels image)
-    image = clamp maxWidth (convert originalImage)
+    image = clamp newWidth (convert originalImage)
+    newWidth = min maxWidth (Juicy.imageWidth originalImage)
 
     printAsciiStep :: Int -> String
     printAsciiStep i =
       imageAscii `S.unsafeIndex` i :
-      if i > 0 && (i+1) `mod` maxWidth == 0
+      if i > 0 && (i+1) `mod` newWidth == 0
         then "\n" else []
 
 getWidth :: IO Int
