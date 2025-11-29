@@ -34,23 +34,15 @@ data Image = Image {
   height :: Int
   }
 
+-- Utility
+
 min3 :: Ord a => a -> a -> a -> a
 min3 a b = min (min a b)
 
 max3 :: Ord a => a -> a -> a -> a
 max3 a b = max (max a b)
 
-asciiSymbols :: [Char]
-asciiSymbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
-
-toAscii :: Pixel -> Char
-toAscii (RGBA r g b a) = asciiSymbols !! index
-  where
-    mn = fromIntegral $ min3 r g b :: Float
-    mx = fromIntegral $ max3 r g b :: Float
-    lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
-    index = round (lightness * fromIntegral maxIndex)
-    maxIndex = length asciiSymbols - 1
+-- Clamping
 
 clamp :: Int -> Image -> Image
 clamp newWidth image = Image {
@@ -76,6 +68,8 @@ clamp newWidth image = Image {
         row = i `div` newWidth :: Int
         column = i `mod` newWidth :: Int
 
+-- Conversion
+
 convert :: Juicy.Image Juicy.PixelRGBA8 -> Image
 convert image = Image {
   pixels = S.generate size convertStep,
@@ -99,6 +93,22 @@ convert image = Image {
         a = getImageByte $ start+3
         start = i * 4
 
+-- ASCII
+
+asciiSymbols :: [Char]
+asciiSymbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
+
+toAscii :: Pixel -> Char
+toAscii (RGBA r g b a) = asciiSymbols !! index
+  where
+    mn = fromIntegral $ min3 r g b :: Float
+    mx = fromIntegral $ max3 r g b :: Float
+    lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
+    index = round (lightness * fromIntegral maxIndex)
+    maxIndex = length asciiSymbols - 1
+
+-- Printing
+
 generateString_rec :: Int -> Int -> (Int -> String) -> String
 generateString_rec i n f
   | i == n    = []
@@ -120,6 +130,8 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
       imageAscii `S.unsafeIndex` i :
       if i > 0 && (i+1) `mod` newWidth == 0
         then "\n" else []
+
+-- User input
 
 getWidth :: IO Int
 getWidth =
@@ -143,7 +155,7 @@ main =
       putStrLn "Converting image to ASCII..." >>
       getImage imgPath >>= \case
         Left err  -> putStrLn $ "Error: " ++ err
-        Right img -> printAscii img maxWidth
+        Right image -> printAscii image maxWidth
     _ ->
       putStrLn "Error: No image input detected." >>
       putStrLn "Drag an image onto the executable to get started!"
