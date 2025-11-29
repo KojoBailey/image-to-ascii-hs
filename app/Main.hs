@@ -90,9 +90,21 @@ clamp max_width img =
     x_step_size = fromIntegral (width img) / fromIntegral new_width
     y_step_size = fromIntegral (height img) / fromIntegral new_height
 
+clamp2 :: Int -> Image -> Image
+clamp2 maxWidth image = Image {
+    pixels = S.generate newSize (\i -> RGBA 255 255 255 255),
+    width = newWidth,
+    height = newHeight }
+  where
+    newSize = newWidth * newHeight
+    newWidth = min maxWidth (width image)
+    newHeight = round (fromIntegral (height image) / xStepSize / 2)
+    xStepSize = fromIntegral (width image) / fromIntegral newWidth :: Float
+    yStepSize = fromIntegral (height image) / fromIntegral newHeight :: Float
+
 convert_rec :: Int -> S.Vector (Juicy.PixelBaseComponent Juicy.PixelRGBA8) -> Pixels
 convert_rec i v
-  | i >= S.length v = S.empty
+  | i >= S.length v     = S.empty
   | otherwise           = RGBA r g b a `S.cons` convert_rec (i+4) v
   where
     r = fromIntegral $ v `S.unsafeIndex` i
@@ -117,7 +129,7 @@ print_ascii_rec i w cs
 print_ascii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
 print_ascii orig_img max_width = print_ascii_rec 0 (width img) ascii
   where
-    img = clamp max_width (convert orig_img)
+    img = clamp2 max_width (convert orig_img)
     ascii = S.map to_ascii (pixels img)
 
 get_width :: IO Int
