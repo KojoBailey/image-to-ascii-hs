@@ -48,19 +48,6 @@ to_ascii (RGBA r g b a) = ascii_symbols !! index
     lightness = (min3 r g b + max3 r g b) / 2 * a
     index = round (lightness * fromIntegral (length ascii_symbols - 1))
 
-get_width :: IO Int
-get_width =
-  putStrLn "Enter output width (recommended max 140) or nothing for default (80):" >>
-  getLine >>= \input ->
-  pure $ if null input then 80 else (read input :: Int)
-
-get_image :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
-get_image path = 
-  Juicy.readImage path >>= \result ->
-  pure $ case result of
-    Left err      -> Left err
-    Right dynImg  -> Right $ Juicy.convertRGBA8 dynImg
-
 clamp_x_rec :: Int -> Float -> Int -> Int -> Float -> Image -> Pixels
 clamp_x_rec column step new_width y_index step_size img
   | column >= new_width = S.empty
@@ -118,15 +105,28 @@ print_ascii_rec :: Int -> Int -> S.Vector Char -> IO ()
 print_ascii_rec i w cs
   | i >= S.length cs = pure ()
   | otherwise            =
-    putChar (S.head cs) >>
+    putChar (cs S.! i) >>
     when (i > 0 && (i+1) `mod` w == 0) (putChar '\n') >>
-    print_ascii_rec (i+1) w (S.tail cs)
+    print_ascii_rec (i+1) w cs
 
 print_ascii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
 print_ascii orig_img max_width = print_ascii_rec 0 (width img) ascii
   where
     img = clamp max_width (convert orig_img)
     ascii = S.map to_ascii (pixels img)
+
+get_width :: IO Int
+get_width =
+  putStrLn "Enter output width (recommended max 140) or nothing for default (80):" >>
+  getLine >>= \input ->
+  pure $ if null input then 80 else (read input :: Int)
+
+get_image :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
+get_image path = 
+  Juicy.readImage path >>= \result ->
+  pure $ case result of
+    Left err      -> Left err
+    Right dynImg  -> Right $ Juicy.convertRGBA8 dynImg
 
 main :: IO ()
 main =
