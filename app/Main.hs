@@ -53,45 +53,8 @@ to_ascii (RGBA r g b a) = ascii_symbols !! index
     index = round (lightness * fromIntegral maxIndex)
     maxIndex = length ascii_symbols - 1
 
-clamp_x_rec :: Int -> Float -> Int -> Int -> Float -> Image -> Pixels
-clamp_x_rec column step new_width y_index step_size img
-  | column >= new_width = S.empty
-  | otherwise       =
-    pixels img `S.unsafeIndex` (y_index * width img + x_index)
-      `S.cons` clamp_x_rec (column+1) (step + step_size) new_width y_index step_size img
-  where
-    x_index = if (column+1) == new_width then width img - 1 else floor step
-
-clamp_x :: Int -> Int -> Float -> Image -> Pixels
-clamp_x = clamp_x_rec 0 0
-
-clamp_y_rec :: Int -> Float -> Int -> Int -> Float -> Float -> Image -> Pixels
-clamp_y_rec row step new_height new_width y_step_size x_step_size img
-  | row >= new_height = S.empty
-  | otherwise     =
-    clamp_x new_width y_index x_step_size img
-      S.++ clamp_y_rec (row+1) (step + y_step_size) new_height new_width y_step_size x_step_size img
-  where
-    y_index = if (row+1) == new_height then height img - 1 else floor step
-
-clamp_y :: Int -> Int -> Float -> Float -> Image -> Image
-clamp_y new_height new_width y_step_size x_step_size img =
-  Image {
-    pixels = clamp_y_rec 0 0 new_height new_width y_step_size x_step_size img,
-    width = new_width,
-    height = new_height }
-
 clamp :: Int -> Image -> Image
-clamp max_width img =
-  clamp_y new_height new_width y_step_size x_step_size img
-  where
-    new_width = min max_width (width img)
-    new_height = round (fromIntegral (height img) / x_step_size / 2)
-    x_step_size = fromIntegral (width img) / fromIntegral new_width
-    y_step_size = fromIntegral (height img) / fromIntegral new_height
-
-clamp2 :: Int -> Image -> Image
-clamp2 maxWidth image = Image {
+clamp maxWidth image = Image {
     pixels = S.generate newSize clampStep,
     width = newWidth,
     height = newHeight }
@@ -109,11 +72,11 @@ clamp2 maxWidth image = Image {
         yIndex = if (row+1) == newHeight
           then height image - 1
           else floor (fromIntegral row * yStepSize)
-        row = i `div` width image :: Int
         xIndex = if (column+1) == newWidth
           then width image - 1
           else floor (fromIntegral column * xStepSize)
-        column = i `mod` width image :: Int
+        row = i `div` newWidth :: Int
+        column = i `mod` newWidth :: Int
 
 convert_rec :: Int -> S.Vector (Juicy.PixelBaseComponent Juicy.PixelRGBA8) -> Pixels
 convert_rec i v
@@ -142,7 +105,7 @@ print_ascii_rec i w cs
 print_ascii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
 print_ascii orig_img max_width = print_ascii_rec 0 (width img) ascii
   where
-    img = clamp2 max_width (convert orig_img)
+    img = clamp max_width (convert orig_img)
     ascii = S.map to_ascii (pixels img)
 
 get_width :: IO Int
