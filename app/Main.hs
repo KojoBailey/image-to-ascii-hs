@@ -101,19 +101,26 @@ convert image = Image {
         a = getImageByte $ start+3
         start = i * 4
 
-print_ascii_rec :: Int -> Int -> S.Vector Char -> IO ()
-print_ascii_rec i w cs
-  | i >= S.length cs = pure ()
-  | otherwise            =
-    putChar (cs `S.unsafeIndex` i) >>
-    when (i > 0 && (i+1) `mod` w == 0) (putChar '\n') >>
-    print_ascii_rec (i+1) w cs
+generateString_rec :: Int -> Int -> (Int -> String) -> String
+generateString_rec i n f
+  | i == n    = []
+  | otherwise = f i ++ generateString_rec (i+1) n f
 
-print_ascii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
-print_ascii orig_img max_width = print_ascii_rec 0 (width img) ascii
+generateString :: Int -> (Int -> String) -> String
+generateString = generateString_rec 0
+
+printAscii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
+printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiStep
   where
-    img = clamp max_width (convert orig_img)
-    ascii = S.map to_ascii (pixels img)
+    size = S.length imageAscii
+    imageAscii = S.map to_ascii (pixels image)
+    image = clamp maxWidth (convert originalImage)
+
+    printAsciiStep :: Int -> String
+    printAsciiStep i =
+      imageAscii `S.unsafeIndex` i :
+      if i > 0 && (i+1) `mod` maxWidth == 0
+        then "\n" else []
 
 get_width :: IO Int
 get_width =
@@ -137,7 +144,7 @@ main =
       putStrLn "Converting image to ASCII..." >>
       get_image imgPath >>= \case
         Left err  -> putStrLn $ "Error: " ++ err
-        Right img -> print_ascii img max_width
+        Right img -> printAscii img max_width
     _ ->
       putStrLn "Error: No image input detected." >>
       putStrLn "Drag an image onto the executable to get started!"
