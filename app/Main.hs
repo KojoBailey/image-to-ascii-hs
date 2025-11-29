@@ -2,10 +2,10 @@
 
 module Main where
 
-import System.Environment
+import System.Environment ( getArgs )
 import qualified Data.Vector.Storable as S
 import Data.Word ( Word8 )
-import Control.Monad
+import Control.Monad ( when )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 
@@ -78,21 +78,28 @@ clamp maxWidth image = Image {
         row = i `div` newWidth :: Int
         column = i `mod` newWidth :: Int
 
-convert_rec :: Int -> S.Vector (Juicy.PixelBaseComponent Juicy.PixelRGBA8) -> Pixels
-convert_rec i v
-  | i >= S.length v     = S.empty
-  | otherwise           = RGBA r g b a `S.cons` convert_rec (i+4) v
-  where
-    r = fromIntegral $ v `S.unsafeIndex` i
-    g = fromIntegral $ v `S.unsafeIndex` (i+1)
-    b = fromIntegral $ v `S.unsafeIndex` (i+2)
-    a = fromIntegral $ v `S.unsafeIndex` (i+3)
-
 convert :: Juicy.Image Juicy.PixelRGBA8 -> Image
-convert img = Image {
-  pixels = convert_rec 0 (Juicy.imageData img),
-  width = Juicy.imageWidth img,
-  height = Juicy.imageHeight img }
+convert image = Image {
+  pixels = S.generate size convertStep,
+  width = imageWidth,
+  height = imageHeight }
+  where
+    size = imageWidth * imageHeight
+    imageWidth = Juicy.imageWidth image
+    imageHeight = Juicy.imageHeight image
+
+    getImageByte :: Int -> Word8
+    getImageByte i = fromIntegral $ imageData `S.unsafeIndex` i
+      where imageData = Juicy.imageData image
+
+    convertStep :: Int -> Pixel
+    convertStep i = RGBA r g b a
+      where
+        r = getImageByte start
+        g = getImageByte $ start+1
+        b = getImageByte $ start+2
+        a = getImageByte $ start+3
+        start = i * 4
 
 print_ascii_rec :: Int -> Int -> S.Vector Char -> IO ()
 print_ascii_rec i w cs
