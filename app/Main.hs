@@ -92,7 +92,7 @@ clamp max_width img =
 
 clamp2 :: Int -> Image -> Image
 clamp2 maxWidth image = Image {
-    pixels = S.generate newSize (\i -> RGBA 255 255 255 255),
+    pixels = S.generate newSize clampStep,
     width = newWidth,
     height = newHeight }
   where
@@ -101,6 +101,19 @@ clamp2 maxWidth image = Image {
     newHeight = round (fromIntegral (height image) / xStepSize / 2)
     xStepSize = fromIntegral (width image) / fromIntegral newWidth :: Float
     yStepSize = fromIntegral (height image) / fromIntegral newHeight :: Float
+
+    clampStep :: Int -> Pixel
+    clampStep i = pixels image `S.unsafeIndex` index
+      where
+        index = yIndex * width image + xIndex
+        yIndex = if (row+1) == newHeight
+          then height image - 1
+          else floor (fromIntegral row * yStepSize)
+        row = i `div` width image :: Int
+        xIndex = if (column+1) == newWidth
+          then width image - 1
+          else floor (fromIntegral column * xStepSize)
+        column = i `mod` width image :: Int
 
 convert_rec :: Int -> S.Vector (Juicy.PixelBaseComponent Juicy.PixelRGBA8) -> Pixels
 convert_rec i v
