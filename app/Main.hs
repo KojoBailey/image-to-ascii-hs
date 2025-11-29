@@ -9,8 +9,10 @@ import qualified Codec.Picture as Juicy
 data Pixel = RGBA Float Float Float Float
   deriving (Show)
 
+type Pixels = [Pixel]
+
 data Image = Image {
-  pixels :: [Pixel],
+  pixels :: Pixels,
   width :: Int,
   height :: Int
   } deriving (Show)
@@ -43,19 +45,19 @@ get_image path =
     Left err      -> Left err
     Right dynImg  -> Right $ Juicy.convertRGBA8 dynImg
 
-clamp_x_rec :: Int -> Float -> Int -> Int -> Float -> Image -> [Pixel]
+clamp_x_rec :: Int -> Float -> Int -> Int -> Float -> Image -> Pixels
 clamp_x_rec column step new_width y_index step_size img
   | column >= new_width = []
   | otherwise       =
-    pixels img !! (y_index * new_width + x_index)
+    pixels img !! (y_index * width img + x_index)
       : clamp_x_rec (column+1) (step + step_size) new_width y_index step_size img
   where
     x_index = if (column+1) == new_width then width img - 1 else floor step
 
-clamp_x :: Int -> Int -> Float -> Image -> [Pixel]
+clamp_x :: Int -> Int -> Float -> Image -> Pixels
 clamp_x = clamp_x_rec 0 0
 
-clamp_y_rec :: Int -> Float -> Int -> Int -> Float -> Float -> Image -> [Pixel]
+clamp_y_rec :: Int -> Float -> Int -> Int -> Float -> Float -> Image -> Pixels
 clamp_y_rec row step new_height new_width y_step_size x_step_size img
   | row >= new_height = []
   | otherwise     =
@@ -80,7 +82,7 @@ clamp max_width img =
     x_step_size = fromIntegral (width img) / fromIntegral new_width
     y_step_size = fromIntegral (height img) / fromIntegral new_height
 
-convert_rec :: Int -> S.Vector (Juicy.PixelBaseComponent Juicy.PixelRGBA8) -> [Pixel]
+convert_rec :: Int -> S.Vector (Juicy.PixelBaseComponent Juicy.PixelRGBA8) -> Pixels
 convert_rec i v = RGBA r g b a : convert_rec (i+4) v
   where
     r = fromIntegral (v S.! i) / 255
