@@ -116,7 +116,7 @@ convert img = Image {
 
 print_ascii_rec :: Int -> Int -> S.Vector Char -> IO ()
 print_ascii_rec i w cs
-  | i + 1 >= S.length cs = pure ()
+  | i >= S.length cs = pure ()
   | otherwise            =
     putChar (S.head cs) >>
     when (i > 0 && (i+1) `mod` w == 0) (putChar '\n') >>
