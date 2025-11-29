@@ -5,7 +5,6 @@ module Main where
 import System.Environment ( getArgs )
 import qualified Data.Vector.Storable as S
 import Data.Word ( Word8 )
-import Control.Monad ( when )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 
@@ -41,17 +40,17 @@ min3 a b = min (min a b)
 max3 :: Ord a => a -> a -> a -> a
 max3 a b = max (max a b)
 
-ascii_symbols :: [Char]
-ascii_symbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
+asciiSymbols :: [Char]
+asciiSymbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
 
-to_ascii :: Pixel -> Char
-to_ascii (RGBA r g b a) = ascii_symbols !! index
+toAscii :: Pixel -> Char
+toAscii (RGBA r g b a) = asciiSymbols !! index
   where
     mn = fromIntegral $ min3 r g b :: Float
     mx = fromIntegral $ max3 r g b :: Float
     lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
     index = round (lightness * fromIntegral maxIndex)
-    maxIndex = length ascii_symbols - 1
+    maxIndex = length asciiSymbols - 1
 
 clamp :: Int -> Image -> Image
 clamp maxWidth image = Image {
@@ -113,7 +112,7 @@ printAscii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
 printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiStep
   where
     size = S.length imageAscii
-    imageAscii = S.map to_ascii (pixels image)
+    imageAscii = S.map toAscii (pixels image)
     image = clamp maxWidth (convert originalImage)
 
     printAsciiStep :: Int -> String
@@ -122,14 +121,14 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
       if i > 0 && (i+1) `mod` maxWidth == 0
         then "\n" else []
 
-get_width :: IO Int
-get_width =
+getWidth :: IO Int
+getWidth =
   putStrLn "Enter output width (recommended max 140) or nothing for default (80):" >>
   getLine >>= \input ->
   pure $ if null input then 80 else (read input :: Int)
 
-get_image :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
-get_image path = 
+getImage :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
+getImage path = 
   Juicy.readImage path >>= \result ->
   pure $ case result of
     Left err      -> Left err
@@ -139,12 +138,12 @@ main :: IO ()
 main =
   getArgs >>= \case
     [imgPath] ->
-      get_width >>= \max_width ->
-      print max_width >>
+      getWidth >>= \maxWidth ->
+      print maxWidth >>
       putStrLn "Converting image to ASCII..." >>
-      get_image imgPath >>= \case
+      getImage imgPath >>= \case
         Left err  -> putStrLn $ "Error: " ++ err
-        Right img -> printAscii img max_width
+        Right img -> printAscii img maxWidth
     _ ->
       putStrLn "Error: No image input detected." >>
       putStrLn "Drag an image onto the executable to get started!"
