@@ -57,7 +57,7 @@ clamp_x_rec :: Int -> Float -> Int -> Int -> Float -> Image -> Pixels
 clamp_x_rec column step new_width y_index step_size img
   | column >= new_width = S.empty
   | otherwise       =
-    pixels img S.! (y_index * width img + x_index)
+    pixels img `S.unsafeIndex` (y_index * width img + x_index)
       `S.cons` clamp_x_rec (column+1) (step + step_size) new_width y_index step_size img
   where
     x_index = if (column+1) == new_width then width img - 1 else floor step
@@ -95,10 +95,10 @@ convert_rec i v
   | i >= S.length v = S.empty
   | otherwise           = RGBA r g b a `S.cons` convert_rec (i+4) v
   where
-    r = fromIntegral $ v S.! i
-    g = fromIntegral $ v S.! (i+1)
-    b = fromIntegral $ v S.! (i+2)
-    a = fromIntegral $ v S.! (i+3)
+    r = fromIntegral $ v `S.unsafeIndex` i
+    g = fromIntegral $ v `S.unsafeIndex` (i+1)
+    b = fromIntegral $ v `S.unsafeIndex` (i+2)
+    a = fromIntegral $ v `S.unsafeIndex` (i+3)
 
 convert :: Juicy.Image Juicy.PixelRGBA8 -> Image
 convert img = Image {
@@ -110,7 +110,7 @@ print_ascii_rec :: Int -> Int -> S.Vector Char -> IO ()
 print_ascii_rec i w cs
   | i >= S.length cs = pure ()
   | otherwise            =
-    putChar (cs S.! i) >>
+    putChar (cs `S.unsafeIndex` i) >>
     when (i > 0 && (i+1) `mod` w == 0) (putChar '\n') >>
     print_ascii_rec (i+1) w cs
 
