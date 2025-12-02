@@ -30,7 +30,7 @@ type Pixels = S.Vector Pixel
 
 data Image = Image {
   pixels :: Pixels,
-  width :: Int,
+  width  :: Int,
   height :: Int }
 
 -- Utility
@@ -46,7 +46,7 @@ max3 a b = max (max a b)
 clamp :: Int -> Image -> Image
 clamp newWidth image = Image {
     pixels = S.generate newSize clampStep,
-    width = newWidth,
+    width  = newWidth,
     height = newHeight }
   where
     newSize = newWidth * newHeight
@@ -72,7 +72,7 @@ clamp newWidth image = Image {
 convert :: Juicy.Image Juicy.PixelRGBA8 -> Image
 convert image = Image {
   pixels = S.generate size convertStep,
-  width = imageWidth,
+  width  = imageWidth,
   height = imageHeight }
   where
     size = imageWidth * imageHeight
