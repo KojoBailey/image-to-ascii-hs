@@ -15,16 +15,16 @@ data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
 instance Storable Pixel where
   sizeOf _ = 4
   alignment _ = alignment (undefined :: Word8)
-  peek ptr =
-    peekByteOff ptr 0 >>= \r ->
-    peekByteOff ptr 1 >>= \g ->
-    peekByteOff ptr 2 >>= \b ->
-    peekByteOff ptr 3 >>= \a ->
+  peek ptr = do
+    r <- peekByteOff ptr 0
+    g <- peekByteOff ptr 1
+    b <- peekByteOff ptr 2
+    a <- peekByteOff ptr 3
     pure (RGBA r g b a)
-  poke ptr (RGBA r g b a) =
-    pokeByteOff ptr 0 r >>
-    pokeByteOff ptr 1 g >>
-    pokeByteOff ptr 2 b >>
+  poke ptr (RGBA r g b a) = do
+    pokeByteOff ptr 0 r
+    pokeByteOff ptr 1 g
+    pokeByteOff ptr 2 b
     pokeByteOff ptr 3 a 
 
 type Pixels = S.Vector Pixel
@@ -134,14 +134,16 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
 -- User input
 
 getWidth :: IO Int
-getWidth =
-  let defaultWidth = 80 in
-  putStrLn ("Enter output width or nothing for default (" ++ show defaultWidth  ++ "):") >>
-  getLine >>= \input_buf ->
-  if null input_buf then pure defaultWidth
-    else case readMaybe input_buf :: Maybe Int of
-      Just input -> pure input
-      Nothing    -> putStrLn "Invalid width. Try again:" >> getWidth
+getWidth = do
+  let defaultWidth = 80
+  putStrLn $ "Enter output width or nothing for default (" ++ show defaultWidth  ++ "):"
+  input <- getLine
+  if null input then pure defaultWidth
+    else case readMaybe input :: Maybe Int of
+      Just w  -> pure w
+      Nothing -> do
+        putStrLn "Invalid width. Try again:"
+        getWidth
 
 getImage :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
 getImage path = fmap Juicy.convertRGBA8 <$> Juicy.readImage path
@@ -149,13 +151,13 @@ getImage path = fmap Juicy.convertRGBA8 <$> Juicy.readImage path
 main :: IO ()
 main =
   getArgs >>= \case
-    [imgPath] ->
-      getWidth >>= \maxWidth ->
-      print maxWidth >>
-      putStrLn "Converting image to ASCII..." >>
+    [imgPath] -> do
+      maxWidth <- getWidth
+      print maxWidth
+      putStrLn "Converting image to ASCII..."
       getImage imgPath >>= \case
         Left err  -> putStrLn $ "Error: " ++ err
         Right image -> printAscii image maxWidth
-    _ ->
-      putStrLn "Error: No image input detected." >>
+    _ -> do
+      putStrLn "Error: No image input detected."
       putStrLn "Drag an image onto the executable to get started!"
