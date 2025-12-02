@@ -8,6 +8,7 @@ import Data.Word ( Word8 )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 import Text.Read ( readMaybe )
+import Codec.Picture.Metadata (Value(Int))
 
 data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
   deriving (Show)
@@ -45,14 +46,13 @@ clamp newWidth image = Image {
     clampStep i = pixels image `S.unsafeIndex` index
       where
         index = yIndex * width image + xIndex
-        yIndex = if (row+1) == newHeight
-          then height image - 1
-          else floor (fromIntegral row * yStepSize)
-        xIndex = if (column+1) == newWidth
-          then width image - 1
-          else floor (fromIntegral column * xStepSize)
+        yIndex = clampIndex (height image) (fromIntegral row * yStepSize)
+        xIndex = clampIndex (width image) (fromIntegral column * xStepSize)
         row = i `div` newWidth :: Int
         column = i `mod` newWidth :: Int
+
+        clampIndex :: Int -> Float -> Int
+        clampIndex dimensionMax normalIndex = min (dimensionMax - 1) (floor normalIndex)
 
 -- Conversion
 
