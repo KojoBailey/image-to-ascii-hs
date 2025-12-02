@@ -31,8 +31,7 @@ type Pixels = S.Vector Pixel
 data Image = Image {
   pixels :: Pixels,
   width :: Int,
-  height :: Int
-  }
+  height :: Int }
 
 -- Utility
 
