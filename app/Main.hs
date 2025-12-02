@@ -17,11 +17,10 @@ instance Storable Pixel where
   alignment _ = alignment (undefined :: Word8)
   peek ptr =
     RGBA
-      <$> off 0
-      <*> off 1
-      <*> off 2
-      <*> off 3
-    where off = peekByteOff ptr
+      <$> peekByteOff ptr 0
+      <*> peekByteOff ptr 1
+      <*> peekByteOff ptr 2
+      <*> peekByteOff ptr 3
   poke ptr (RGBA r g b a) = do
     pokeByteOff ptr 0 r
     pokeByteOff ptr 1 g
