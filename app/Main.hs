@@ -134,7 +134,7 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
 
 getWidth :: IO Int
 getWidth =
-  putStrLn "Enter output width (recommended max 140) or nothing for default (80):" >>
+  putStrLn "Enter output width or nothing for default (80):" >>
   getLine >>= \input ->
   pure $ if null input then 80 else (read input :: Int)
 
