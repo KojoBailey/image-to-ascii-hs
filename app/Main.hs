@@ -101,13 +101,8 @@ toAscii (RGBA r g b a) = asciiSymbols !! index
 
 -- Printing
 
-generateString_rec :: Int -> Int -> (Int -> String) -> String
-generateString_rec i n f
-  | i == n    = []
-  | otherwise = f i ++ generateString_rec (i+1) n f
-
 generateString :: Int -> (Int -> String) -> String
-generateString = generateString_rec 0
+generateString n f = foldMap f [0..n-1]
 
 printAscii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
 printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiStep
@@ -121,7 +116,8 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
     printAsciiStep i =
       imageAscii `S.unsafeIndex` i :
       if i > 0 && (i+1) `mod` newWidth == 0
-        then "\n" else []
+        then "\n"
+        else []
 
 -- User input
 
