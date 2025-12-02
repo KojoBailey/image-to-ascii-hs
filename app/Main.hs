@@ -15,17 +15,11 @@ data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
 instance Storable Pixel where
   sizeOf _ = 4
   alignment _ = alignment (undefined :: Word8)
-  peek ptr =
-    RGBA
-      <$> peekByteOff ptr 0
-      <*> peekByteOff ptr 1
-      <*> peekByteOff ptr 2
-      <*> peekByteOff ptr 3
-  poke ptr (RGBA r g b a) = do
-    pokeByteOff ptr 0 r
-    pokeByteOff ptr 1 g
-    pokeByteOff ptr 2 b
-    pokeByteOff ptr 3 a 
+  peek ptr = RGBA <$> off 0 <*> off 1 <*> off 2 <*> off 3
+    where off = peekByteOff ptr
+  poke ptr (RGBA r g b a) =
+    let off = pokeByteOff ptr in
+    off 0 r >> off 1 g >> off 2 b >> off 3 a
 
 type Pixels = S.Vector Pixel
 
