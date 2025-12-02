@@ -7,6 +7,7 @@ import qualified Data.Vector.Storable as S
 import Data.Word ( Word8 )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
+import Text.Read ( readMaybe )
 
 data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
   deriving (Show)
@@ -136,8 +137,11 @@ getWidth :: IO Int
 getWidth =
   let defaultWidth = 80 in
   putStrLn ("Enter output width or nothing for default (" ++ show defaultWidth  ++ "):") >>
-  getLine >>= \input ->
-  pure $ if null input then defaultWidth else read input
+  getLine >>= \input_buf ->
+  if null input_buf then pure defaultWidth
+    else case readMaybe input_buf :: Maybe Int of
+      Just input -> pure input
+      Nothing    -> putStrLn "Invalid width. Try again:" >> getWidth
 
 getImage :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
 getImage path = fmap Juicy.convertRGBA8 <$> Juicy.readImage path
