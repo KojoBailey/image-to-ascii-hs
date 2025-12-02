@@ -92,6 +92,7 @@ toAscii (RGBA r g b a) = asciiSymbols !! round (lightness * fromIntegral maxInde
 
 -- Printing
 
+-- TODO: Consider processing row-by-row rather than inserting newlines between rows
 generateString :: Int -> (Int -> TLB.Builder) -> TL.Text
 generateString n f = TLB.toLazyText $ foldMap f [0..n-1]
 
