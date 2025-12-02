@@ -8,7 +8,6 @@ import Data.Word ( Word8 )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 import Text.Read ( readMaybe )
-import Data.Data (Data(gfoldl))
 
 data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
   deriving (Show)
