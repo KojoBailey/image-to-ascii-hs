@@ -8,6 +8,7 @@ import Data.Word ( Word8 )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 import Text.Read ( readMaybe )
+import Data.Data (Data(gfoldl))
 
 data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
   deriving (Show)
@@ -111,15 +112,17 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
 
 getWidth :: IO Int
 getWidth = do
-  let defaultWidth = 80
-  putStrLn $ "Enter output width or nothing for default (" ++ show defaultWidth  ++ "):"
-  input <- getLine
-  if null input then pure defaultWidth
-    else case readMaybe input :: Maybe Int of
-      Just w  -> pure w
-      Nothing -> do
-        putStrLn "Invalid width. Try again:"
-        getWidth
+  putStrLn $ "Enter output width or nothing for default (" ++ show default_  ++ "):"
+  go
+  where
+    default_ = 80
+    go = do
+      input <- getLine
+      case input of
+        "" -> pure default_
+        _  -> case readMaybe input :: Maybe Int of
+          Just w  -> pure w
+          Nothing -> putStrLn "Invalid width. Try again:" >> go
 
 getImage :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
 getImage path = fmap Juicy.convertRGBA8 <$> Juicy.readImage path
