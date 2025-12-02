@@ -93,10 +93,10 @@ asciiSymbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
 toAscii :: Pixel -> Char
 toAscii (RGBA r g b a) = asciiSymbols !! index
   where
+    index = round (lightness * fromIntegral maxIndex)
+    lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
     mn = fromIntegral $ minimum [r, g, b] :: Float
     mx = fromIntegral $ maximum [r, g, b] :: Float
-    lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
-    index = round (lightness * fromIntegral maxIndex)
     maxIndex = length asciiSymbols - 1
 
 -- Printing
