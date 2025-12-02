@@ -102,10 +102,10 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
 
     printAsciiStep :: Int -> String
     printAsciiStep i =
-      imageAscii `S.unsafeIndex` i :
-      if i > 0 && (i+1) `mod` newWidth == 0
-        then "\n"
-        else []
+      if (i+1) `mod` newWidth == 0
+        then c : "\n"
+        else [c]
+      where c = imageAscii `S.unsafeIndex` i
 
 -- User input
 
