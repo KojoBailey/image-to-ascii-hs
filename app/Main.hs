@@ -8,7 +8,6 @@ import Data.Word ( Word8 )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 import Text.Read ( readMaybe )
-import Codec.Picture.Metadata (Value(Int))
 
 data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
   deriving (Show)
@@ -71,13 +70,8 @@ convert image = Image {
       where imageData = Juicy.imageData image
 
     convertStep :: Int -> Pixel
-    convertStep i = RGBA r g b a
-      where
-        r = getImageByte start
-        g = getImageByte $ start+1
-        b = getImageByte $ start+2
-        a = getImageByte $ start+3
-        start = i * 4
+    convertStep i = RGBA (get 0) (get 1) (get 2) (get 3)
+      where get off = getImageByte $ i * 4 + off
 
 -- ASCII
 
