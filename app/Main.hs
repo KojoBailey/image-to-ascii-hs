@@ -34,14 +34,6 @@ data Image = Image {
   width  :: Int,
   height :: Int }
 
--- Utility
-
-min3 :: Ord a => a -> a -> a -> a
-min3 a b = min (min a b)
-
-max3 :: Ord a => a -> a -> a -> a
-max3 a b = max (max a b)
-
 -- Clamping
 
 clamp :: Int -> Image -> Image
@@ -101,8 +93,8 @@ asciiSymbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
 toAscii :: Pixel -> Char
 toAscii (RGBA r g b a) = asciiSymbols !! index
   where
-    mn = fromIntegral $ min3 r g b :: Float
-    mx = fromIntegral $ max3 r g b :: Float
+    mn = fromIntegral $ minimum [r, g, b] :: Float
+    mx = fromIntegral $ maximum [r, g, b] :: Float
     lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
     index = round (lightness * fromIntegral maxIndex)
     maxIndex = length asciiSymbols - 1
