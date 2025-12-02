@@ -153,7 +153,6 @@ main =
   getArgs >>= \case
     [imgPath] -> do
       maxWidth <- getWidth
-      print maxWidth
       putStrLn "Converting image to ASCII..."
       getImage imgPath >>= \case
         Left err  -> putStrLn $ "Error: " ++ err
