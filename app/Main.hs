@@ -36,7 +36,7 @@ clamp newWidth image = Image {
     width  = newWidth,
     height = newHeight }
   where
-    newSize = newWidth * newHeight
+    newSize   = newWidth * newHeight
     newHeight = round (fromIntegral (height image) / xStepSize / 2)
     xStepSize = fromIntegral (width image) / fromIntegral newWidth :: Float
     yStepSize = fromIntegral (height image) / fromIntegral newHeight :: Float
@@ -44,10 +44,10 @@ clamp newWidth image = Image {
     clampStep :: Int -> Pixel
     clampStep i = pixels image `S.unsafeIndex` index
       where
-        index = yIndex * width image + xIndex
+        index  = yIndex * width image + xIndex
         yIndex = clampIndex (height image) (fromIntegral row * yStepSize)
         xIndex = clampIndex (width image) (fromIntegral column * xStepSize)
-        row = i `div` newWidth :: Int
+        row    = i `div` newWidth :: Int
         column = i `mod` newWidth :: Int
 
         clampIndex :: Int -> Float -> Int
@@ -61,8 +61,8 @@ convert image = Image {
   width  = imageWidth,
   height = imageHeight }
   where
-    size = imageWidth * imageHeight
-    imageWidth = Juicy.imageWidth image
+    size        = imageWidth * imageHeight
+    imageWidth  = Juicy.imageWidth image
     imageHeight = Juicy.imageHeight image
 
     getImageByte :: Int -> Word8
@@ -79,13 +79,13 @@ asciiSymbols :: [Char]
 asciiSymbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
 
 toAscii :: Pixel -> Char
-toAscii (RGBA r g b a) = asciiSymbols !! index
+toAscii (RGBA r g b a) = asciiSymbols !! round (lightness * fromIntegral maxIndex)
   where
-    index = round (lightness * fromIntegral maxIndex)
-    lightness = (mn + mx) / 2 / 255 * fromIntegral a / 255 :: Float
-    mn = fromIntegral $ minimum [r, g, b] :: Float
-    mx = fromIntegral $ maximum [r, g, b] :: Float
-    maxIndex = length asciiSymbols - 1
+    lightness = (mn + mx) / 2 / 255 * opacity :: Float
+    mn        = fromIntegral $ minimum [r, g, b] :: Float
+    mx        = fromIntegral $ maximum [r, g, b] :: Float
+    opacity   = fromIntegral a / 255
+    maxIndex  = length asciiSymbols - 1
 
 -- Printing
 
@@ -95,10 +95,10 @@ generateString n f = foldMap f [0..n-1]
 printAscii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
 printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiStep
   where
-    size = S.length imageAscii
+    size       = S.length imageAscii
     imageAscii = S.map toAscii (pixels image)
-    image = clamp newWidth (convert originalImage)
-    newWidth = min maxWidth (Juicy.imageWidth originalImage)
+    image      = clamp newWidth (convert originalImage)
+    newWidth   = min maxWidth (Juicy.imageWidth originalImage)
 
     printAsciiStep :: Int -> String
     printAsciiStep i =
