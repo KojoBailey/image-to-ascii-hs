@@ -31,7 +31,7 @@ data Image = Image {
   width  :: Int,
   height :: Int }
 
--- Clamping
+{- Clamping -}
 
 clamp :: Int -> Image -> Image
 clamp newWidth image = Image {
@@ -56,7 +56,7 @@ clamp newWidth image = Image {
         clampIndex :: Int -> Float -> Int
         clampIndex dimensionMax normalIndex = min (dimensionMax - 1) (floor normalIndex)
 
--- Conversion
+{- Conversion -}
 
 convert :: Juicy.Image Juicy.PixelRGBA8 -> Image
 convert image = Image {
@@ -76,7 +76,7 @@ convert image = Image {
     convertStep i = RGBA (get 0) (get 1) (get 2) (get 3)
       where get off = getImageByte $ i * 4 + off
 
--- ASCII
+{- ASCII -}
 
 asciiSymbols :: [Char]
 asciiSymbols = [' ', '.', ':', '-', '=', '+', '/', '%', '#', '@']
@@ -90,7 +90,7 @@ toAscii (RGBA r g b a) = asciiSymbols !! round (lightness * fromIntegral maxInde
     opacity   = fromIntegral a / 255
     maxIndex  = length asciiSymbols - 1
 
--- Printing
+{- Printing -}
 
 -- TODO: Consider processing row-by-row rather than inserting newlines between rows
 generateString :: Int -> (Int -> TLB.Builder) -> TL.Text
@@ -111,7 +111,7 @@ printAscii originalImage maxWidth = TLIO.putStrLn $ generateString size printAsc
         else c
       where c = TLB.singleton $ imageAscii `S.unsafeIndex` i
 
--- User input
+{- User input -}
 
 getWidth :: IO Int
 getWidth = do
