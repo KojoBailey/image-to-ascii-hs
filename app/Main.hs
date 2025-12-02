@@ -15,12 +15,13 @@ data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
 instance Storable Pixel where
   sizeOf _ = 4
   alignment _ = alignment (undefined :: Word8)
-  peek ptr = do
-    r <- peekByteOff ptr 0
-    g <- peekByteOff ptr 1
-    b <- peekByteOff ptr 2
-    a <- peekByteOff ptr 3
-    pure (RGBA r g b a)
+  peek ptr =
+    RGBA
+      <$> off 0
+      <*> off 1
+      <*> off 2
+      <*> off 3
+    where off = peekByteOff ptr
   poke ptr (RGBA r g b a) = do
     pokeByteOff ptr 0 r
     pokeByteOff ptr 1 g
