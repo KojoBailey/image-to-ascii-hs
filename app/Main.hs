@@ -8,6 +8,9 @@ import Data.Word ( Word8 )
 import qualified Codec.Picture as Juicy
 import Foreign.Storable
 import Text.Read ( readMaybe )
+import qualified Data.Text.Lazy.Builder as TLB
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.IO as TLIO
 
 data Pixel = RGBA !Word8 !Word8 !Word8 !Word8
   deriving (Show)
@@ -89,23 +92,23 @@ toAscii (RGBA r g b a) = asciiSymbols !! round (lightness * fromIntegral maxInde
 
 -- Printing
 
-generateString :: Int -> (Int -> String) -> String
-generateString n f = foldMap f [0..n-1]
+generateString :: Int -> (Int -> TLB.Builder) -> TL.Text
+generateString n f = TLB.toLazyText $ foldMap f [0..n-1]
 
 printAscii :: Juicy.Image Juicy.PixelRGBA8 -> Int -> IO ()
-printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiStep
+printAscii originalImage maxWidth = TLIO.putStrLn $ generateString size printAsciiStep
   where
     size       = S.length imageAscii
     imageAscii = S.map toAscii (pixels image)
     image      = clamp newWidth (convert originalImage)
     newWidth   = min maxWidth (Juicy.imageWidth originalImage)
 
-    printAsciiStep :: Int -> String
+    printAsciiStep :: Int -> TLB.Builder
     printAsciiStep i =
       if (i+1) `mod` newWidth == 0
-        then c : "\n"
-        else [c]
-      where c = imageAscii `S.unsafeIndex` i
+        then c <> TLB.fromString "\n"
+        else c
+      where c = TLB.singleton $ imageAscii `S.unsafeIndex` i
 
 -- User input
 
