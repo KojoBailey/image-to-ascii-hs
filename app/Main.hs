@@ -134,9 +134,10 @@ printAscii originalImage maxWidth = putStrLn $ generateString size printAsciiSte
 
 getWidth :: IO Int
 getWidth =
-  putStrLn "Enter output width or nothing for default (80):" >>
+  let default_width = 80 :: Int in
+  putStrLn ("Enter output width or nothing for default (" ++ show default_width  ++ "):") >>
   getLine >>= \input ->
-  pure $ if null input then 80 else (read input :: Int)
+  pure $ if null input then default_width else (read input :: Int)
 
 getImage :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
 getImage path = fmap Juicy.convertRGBA8 <$> Juicy.readImage path
