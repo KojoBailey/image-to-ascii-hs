@@ -139,11 +139,7 @@ getWidth =
   pure $ if null input then 80 else (read input :: Int)
 
 getImage :: String -> IO (Either String (Juicy.Image Juicy.PixelRGBA8))
-getImage path = 
-  Juicy.readImage path >>= \result ->
-  pure $ case result of
-    Left err      -> Left err
-    Right dynImg  -> Right $ Juicy.convertRGBA8 dynImg
+getImage path = fmap Juicy.convertRGBA8 <$> Juicy.readImage path
 
 main :: IO ()
 main =
